@@ -1,84 +1,79 @@
 global node, repo
 
-pkg = {
-    'curl': {},
-    'apt-transport-https': {},
-    'rspamd': {
-        'installed': True,
-        'needs': [
-            'action:apt_update_cache',
-        ],
-    }
-}
-
-actions = {}
-files = {}
 config = node.metadata.get('rspamd', {})
 
-actions['import_rspamd_apt_key'] = {
-    'command': 'curl https://rspamd.com/apt-stable/gpg.key | apt-key --no-tty add -',
-    'needs': [
-        'pkg:curl',
-    ]
-}
+config_files = [
+    'redis.conf',
+    'classifier-bayes.conf',
+    'milter_headers.conf',
+    'logging.inc',
+    'worker-controller.inc',
+    'worker-proxy.inc',
+    'worker-normal.inc',
+    'logging.inc',
+    'options.inc',
+    'actions.conf'
+]
 
-actions['apt_update_cache'] = {
-    'command': 'apt update',
-    'needs': [
-        'import_rspamd_apt_key',
-        'file:/etc/apt/sources.list/rspamd.list',
-    ]
-}
+if config.get('mx_check').get('enabled'):
+    config_files.append('mx_check.conf')
 
-actions['rpamd_woker_password'] = {
-    'command':  'worker_password=$(rspamadm pw -p {worker_password}) && sed -s "/worker_password/$worker_password/g"'
-                .format(worker_password=config.get('worker_password', repo.vault.password_for(
-                    'rspamd_worker_password_{}'.format(node.name)))
-                ),
-    'needs': [
-        'file:/etc/rspamd/local.d/worker-controller.inc',
-    ],
-}
+if config.get('rbl').get('enabled'):
+    config_files.append('rbl.conf')
 
-files['/etc/apt/sources.list/rspamd.list'] = {
-    'content': """
-        deb http://rspamd.com/apt-stable/ stretch main
-        deb-src http://rspamd.com/apt-stable/ stretch main
-    """,
-}
+if config.get('greylist').get('enabled'):
+    config_files.append('greylist.conf')
 
-files['/etc/rspamd/local.d/options.inc'] = {
-    'source': 'etc/rspamd/local.d/options.inc',
-    'content_type': 'mako',
-    'context': {
-        'nameserver': config.get('nameserver'),
+svc_systemd = {
+    'rspamd': {
+        'enabled': True,
+        'running': True,
+        'needs': [
+            'action:import_rspamd_apt_key',
+            'pkg_apt:rspamd',
+        ]
     }
 }
 
-files['/etc/rspamd/local.d/worker-normal.inc'] = {
-    'source': 'etc/rspamd/local.d/worker-normal.inc',
+actions = {
+    'import_rspamd_apt_key': {
+        'command': 'wget -O- https://rspamd.com/apt-stable/gpg.key | gpg --dearmor > /etc/apt/keyrings/rspamd.gpg',
+        'unless': 'test -f  /etc/apt/keyrings/rspamd.gpg',
+        'needs': [
+            'pkg_apt:gpg',
+            'pkg_apt:wget',
+        ],
+        'triggers': [
+            'action:apt_update_cache',
+        ]
+    },
+
+    'apt_update_cache': {
+        'command': 'apt update',
+        'needs': [
+            'file:/etc/apt/sources.list.d/rspamd.list',
+        ],
+        'triggered': True
+    },
 }
 
-files['/etc/rspamd/local.d/worker-controller.inc'] = {
-    'source': 'etc/rspamd/local.d/worker-controller.inc',
+files = {
+    '/etc/apt/sources.list.d/rspamd.list': {
+        'content': f"""
+            deb [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
+            deb-src [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
+        """,
+    },
 }
 
-files['/etc/rspamd/local.d/worker-proxy.inc'] = {
-    'source': 'etc/rspamd/local.d/worker-proxy.inc',
-}
-
-files['/etc/rspamd/local.d/logging.inc'] = {
-    'source': 'etc/rspamd/local.d/logging.inc',
-}
-
-files['/etc/rspamd/local.d/worker-controller.inc'] = {
-    'source': 'etc/rspamd/local.d/milter_headers.conf',
-}
-
-files['/etc/rspamd/local.d/classifier-bayes.conf'] = {
-    'source': 'etc/rspamd/local.d/classifier-bayes.conf',
-}
-
-files['/etc/rspamd/local.d/redis.conf'] = {
-    'source': 'etc/rspamd/local.d/redis.conf',
-}
+for file in config_files:
+    files[f'/etc/rspamd/local.d/{file}'] = {
+        'source': f'etc/rspamd/local.d/{file}',
+        'content_type': 'mako',
+        'context': {
+            'cfg': config,
+        },
+        'triggers': [
+            'svc_systemd:rspamd:restart',
+        ]
+    }

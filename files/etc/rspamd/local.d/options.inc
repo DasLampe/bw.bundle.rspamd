@@ -1,5 +1,7 @@
-local_addrs = "127.0.0.0/8, ::1";
+local_addrs = "${', '.join(cfg.get('local_addrs'))}";
+
+control_socket = "$DBDIR/rspamd.sock mode=0600 owner=${cfg.get('user')}";
 
 dns {
-    nameserver = ["${nameserver}:10"];
+    nameserver = ${cfg.get('nameservers')};
 }

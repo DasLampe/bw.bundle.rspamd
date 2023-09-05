@@ -1,1 +1,1 @@
-password = "worker_password"
+password = "${ cfg.get('worker_password') }"
