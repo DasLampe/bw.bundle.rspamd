@@ -1,0 +1,11 @@
+<%
+  default_servers = cfg.get('redis_servers', {}).get('redis', [])
+  servers = cfg.get('redis_servers', {}).get('fuzzy', default_servers)
+%>\
+% if len(servers) < 2:
+servers = "${' '.join(servers)}";
+% else:
+read_servers = "${' '.join(servers[1:])}";
+write_servers = "${servers[0]}";
+% endif
+backend = "redis";
