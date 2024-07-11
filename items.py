@@ -24,6 +24,10 @@ if config.get('rbl').get('enabled'):
 if config.get('greylist').get('enabled'):
     config_files.append('greylist.conf')
 
+override_files = [
+    'worker-fuzzy.inc',
+]
+
 svc_systemd = {
     'rspamd': {
         'enabled': True,
@@ -69,6 +73,18 @@ files = {
 for file in config_files:
     files[f'/etc/rspamd/local.d/{file}'] = {
         'source': f'etc/rspamd/local.d/{file}',
+        'content_type': 'mako',
+        'context': {
+            'cfg': config,
+        },
+        'triggers': [
+            'svc_systemd:rspamd:restart',
+        ]
+    }
+
+for file in override_files:
+    files[f'/etc/rspamd/override.d/{file}'] = {
+        'source': f'etc/rspamd/override.d/{file}',
         'content_type': 'mako',
         'context': {
             'cfg': config,
