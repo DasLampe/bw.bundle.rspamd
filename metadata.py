@@ -1,4 +1,4 @@
-global node
+global node, repo
 
 defaults = {
     'rspamd': {
@@ -7,10 +7,10 @@ defaults = {
         'worker_password': repo.vault.password_for(f'rspamd_worker_password_{node.name}').value,
         'redis_servers': {
             'redis': ['localhost'],
-            'bayes': ['localhost'],  # If Multiple, First is write, all other are read
-            'fuzzy': ['localhost'],
-            'greylist': ['localhost'],
-            'mx_check': ['localhost'],
+            # 'bayes': ['replecation_master', 'localhost'],  # If Multiple, First is write, all other are read
+            # 'fuzzy': ['localhost'],
+            # 'greylist': ['localhost'],
+            # 'mx_check': ['localhost'],
         },
         'mailserver_hostname': node.hostname,
         'extended_spam_headers': True,
@@ -30,6 +30,13 @@ defaults = {
         },
         'greylist': {
             'enabled': True,
+            'whitelist': {
+                'ips': [
+                    '127.0.0.1',
+                    '::1',
+                ],
+                'domains': [],
+            },
         }
     },
     'apt': {
