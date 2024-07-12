@@ -7,7 +7,7 @@ defaults = {
         'worker_password': repo.vault.password_for(f'rspamd_worker_password_{node.name}').value,
         'redis_servers': {
             'redis': ['localhost'],
-            # 'bayes': ['replecation_master', 'localhost'],  # If Multiple, First is write, all other are read
+            # 'bayes': ['replication_master', 'localhost'],  # If Multiple, First is write, all other are read
             # 'fuzzy': ['localhost'],
             # 'greylist': ['localhost'],
             # 'mx_check': ['localhost'],
