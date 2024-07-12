@@ -37,7 +37,11 @@ defaults = {
                 ],
                 'domains': [],
             },
-        }
+        },
+        'neighbours': {
+            'server1': {'host': ''},
+            # 'server2': {'host': 'localhost', 'path': '/rspamd'},
+        },
     },
     'apt': {
         'packages': {
