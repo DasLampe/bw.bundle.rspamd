@@ -26,7 +26,13 @@ if config.get('greylist').get('enabled'):
 
 override_files = [
     'worker-fuzzy.inc',
+    'dkim_signing.conf',  # disable DKIM Signing
 ]
+
+map_files = {
+    'greylist-whitelist-ip.inc': config.get('greylist').get('whitelist').get('ips'),
+    'greylist-whitelist-domains.inc': config.get('greylist').get('whitelist').get('domains'),
+}
 
 svc_systemd = {
     'rspamd': {
@@ -89,6 +95,16 @@ for file in override_files:
         'context': {
             'cfg': config,
         },
+        'triggers': [
+            'svc_systemd:rspamd:restart',
+        ]
+    }
+
+for file_name, content in map_files.items():
+    files[f'/etc/rspamd/maps.d/{file_name}'] = {
+        'content': "\n".join(content) + "\n",
+        'owner': config.get('user'),
+        'group': config.get('group'),
         'triggers': [
             'svc_systemd:rspamd:restart',
         ]
