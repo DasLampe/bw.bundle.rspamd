@@ -29,13 +29,10 @@ override_files = [
     'dkim_signing.conf',  # disable DKIM Signing
 ]
 
-map_files = {}
-
-if config.get('greylist').get('whitelist').get('ips'):
-    map_files['greylist-whitelist-ip.inc'] = config.get('greylist').get('whitelist').get('ips')
-
-if config.get('greylist').get('whitelist').get('domains'):
-    map_files['greylist-whitelist-domains.inc'] = config.get('greylist').get('whitelist').get('domains')
+map_files = {
+    'greylist-whitelist-ip.inc': config.get('greylist').get('whitelist').get('ips'),
+    'greylist-whitelist-domains.inc': config.get('greylist').get('whitelist').get('domains'),
+}
 
 svc_systemd = {
     'rspamd': {
