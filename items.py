@@ -12,7 +12,9 @@ config_files = [
     'worker-normal.inc',
     'logging.inc',
     'options.inc',
-    'actions.conf'
+    'actions.conf',
+    'rbl_group.conf',
+    'settings.conf',
 ]
 
 if config.get('mx_check').get('enabled'):

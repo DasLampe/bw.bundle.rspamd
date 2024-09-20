@@ -6,6 +6,7 @@ dns {
     nameserver = ${cfg.get('nameservers')};
 }
 
+% if cfg.get('neighbours', {}):
 neighbours {
 % for name, server in cfg.get('neighbours').items():
     ${name} {
@@ -16,3 +17,4 @@ neighbours {
     }
  % endfor
 }
+%endif

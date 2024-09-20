@@ -27,6 +27,7 @@ defaults = {
         },
         'rbl': {
             'enabled': True,
+            'spamhaus_dqs_key': '',
         },
         'greylist': {
             'enabled': True,
@@ -39,7 +40,7 @@ defaults = {
             },
         },
         'neighbours': {
-            'server1': {'host': ''},
+            # 'server1': {'host': ''},
             # 'server2': {'host': 'localhost', 'path': '/rspamd'},
         },
     },
