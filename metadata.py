@@ -39,7 +39,7 @@ defaults = {
             },
         },
         'neighbours': {
-            'server1': {'host': ''},
+            # 'server1': {'host': ''},
             # 'server2': {'host': 'localhost', 'path': '/rspamd'},
         },
     },
