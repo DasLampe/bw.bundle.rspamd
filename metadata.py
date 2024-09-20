@@ -27,6 +27,7 @@ defaults = {
         },
         'rbl': {
             'enabled': True,
+            'spamhaus_dqs_key': '',
         },
         'greylist': {
             'enabled': True,
