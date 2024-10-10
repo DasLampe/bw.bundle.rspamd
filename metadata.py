@@ -43,6 +43,12 @@ defaults = {
             # 'server1': {'host': ''},
             # 'server2': {'host': 'localhost', 'path': '/rspamd'},
         },
+        'dkim': {
+            'enabled': False,
+            'path': '/var/lib/rspamd/dkim',
+            'selector': 'dkim',
+            'domains':{},
+        },
     },
     'apt': {
         'packages': {

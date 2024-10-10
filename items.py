@@ -1,4 +1,8 @@
 global node, repo
+from bundlewrap.utils import get_file_contents
+from os.path import join
+
+files = {}
 
 config = node.metadata.get('rspamd', {})
 
@@ -17,6 +21,11 @@ config_files = [
     'settings.conf',
 ]
 
+override_files = [
+    'worker-fuzzy.inc',
+    'dkim_signing.conf',
+]
+
 if config.get('mx_check').get('enabled'):
     config_files.append('mx_check.conf')
 
@@ -26,10 +35,24 @@ if config.get('rbl').get('enabled'):
 if config.get('greylist').get('enabled'):
     config_files.append('greylist.conf')
 
-override_files = [
-    'worker-fuzzy.inc',
-    'dkim_signing.conf',  # disable DKIM Signing
-]
+if config.get('dkim').get('enabled'):
+    config_files.append('dkim_signing.conf')
+    config_files.append('arc.conf')
+
+    # Copy key files per domain
+    dkim_conf = config.get('dkim')
+    for domain, domain_config in dkim_conf.get('domains').items():
+        selector = domain_config.get('selector', dkim_conf.get('selector'))
+
+        files[f"{dkim_conf.get('path')}/{domain}.{selector}.key"] = {
+            'content': repo.vault.decrypt_file(
+                join(repo.path, 'data', 'dkim_keys', config.get('key', f'{domain}.{selector}.key'))
+            ),
+            'content_type': 'text',
+            'owner': config.get('user'),
+            'group': config.get('group'),
+            'mode': '0400',
+        }
 
 map_files = {
     'greylist-whitelist-ip.inc': config.get('greylist').get('whitelist').get('ips'),
@@ -69,13 +92,11 @@ actions = {
     },
 }
 
-files = {
-    '/etc/apt/sources.list.d/rspamd.list': {
-        'content': f"""
-            deb [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
-            deb-src [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
-        """,
-    },
+files['/etc/apt/sources.list.d/rspamd.list'] = {
+    'content': f"""
+        deb [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
+        deb-src [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] https://rspamd.com/apt-stable/ {node.metadata.get('debian', {}).get('release_name', 'bullseye')} main
+    """,
 }
 
 for file in config_files:
