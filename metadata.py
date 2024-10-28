@@ -39,6 +39,11 @@ defaults = {
                 'domains': [],
             },
         },
+        'multimap': {
+            'blacklist': {
+                'subjects': [],
+            }
+        },
         'neighbours': {
             # 'server1': {'host': ''},
             # 'server2': {'host': 'localhost', 'path': '/rspamd'},

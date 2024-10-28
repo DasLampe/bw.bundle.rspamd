@@ -19,6 +19,7 @@ config_files = [
     'actions.conf',
     'rbl_group.conf',
     'settings.conf',
+    'multimap.conf',
 ]
 
 override_files = [
@@ -57,6 +58,7 @@ if config.get('dkim').get('enabled'):
 map_files = {
     'greylist-whitelist-ip.inc': config.get('greylist').get('whitelist').get('ips'),
     'greylist-whitelist-domains.inc': config.get('greylist').get('whitelist').get('domains'),
+    'multimap-blacklist-subjects.inc': config.get('multimap').get('blacklist').get('subjects'),
 }
 
 svc_systemd = {
