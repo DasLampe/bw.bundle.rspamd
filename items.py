@@ -3,6 +3,7 @@ from bundlewrap.utils import get_file_contents
 from os.path import join
 
 files = {}
+directories = {}
 
 config = node.metadata.get('rspamd', {})
 
@@ -42,6 +43,13 @@ if config.get('dkim').get('enabled'):
 
     # Copy key files per domain
     dkim_conf = config.get('dkim')
+    directories[dkim_conf.get('path')] = {
+        'owner': config.get('user'),
+        'group': config.get('group'),
+        'needs': [
+            'pkg_apt:rspamd',
+        ]
+    }
     for domain, domain_config in dkim_conf.get('domains').items():
         selector = domain_config.get('selector', dkim_conf.get('selector'))
 
@@ -53,6 +61,9 @@ if config.get('dkim').get('enabled'):
             'owner': config.get('user'),
             'group': config.get('group'),
             'mode': '0400',
+            'needs': [
+                f'directory:{dkim_conf.get('path')}',
+            ]
         }
 
 map_files = {
@@ -110,6 +121,9 @@ for file in config_files:
         },
         'triggers': [
             'svc_systemd:rspamd:restart',
+        ],
+        'needs': [
+            'pkg_apt:rspamd'
         ]
     }
 
@@ -122,6 +136,9 @@ for file in override_files:
         },
         'triggers': [
             'svc_systemd:rspamd:restart',
+        ],
+        'needs': [
+            'pkg_apt:rspamd'
         ]
     }
 
@@ -132,5 +149,8 @@ for file_name, content in map_files.items():
         'group': config.get('group'),
         'triggers': [
             'svc_systemd:rspamd:restart',
+        ],
+        'needs': [
+            'pkg_apt:rspamd'
         ]
     }
